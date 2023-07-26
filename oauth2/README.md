@@ -166,3 +166,8 @@ OAuth2中包含4种角色, 分别是:
 * refresh_token: 刷新令牌
 * expires_in: 有效期限
 * token_type: 令牌类型
+
+## 鸣谢
+
+* [osin](https://github.com/openshift/osin)
+* [go-oauth2-server](https://github.com/RichardKnop/go-oauth2-server)
