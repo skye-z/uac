@@ -11,8 +11,18 @@ var (
 	pkceMatcher = regexp.MustCompile("^[a-zA-Z0-9~._-]{43,128}$")
 )
 
+const (
+	CODE  AuthorizeRequestType = "code"
+	TOKEN AuthorizeRequestType = "token"
+
+	PKCE_PLAIN string = "plain"
+	PKCE_S256  string = "S256"
+)
+
+// 请求授权类型
 type AuthorizeRequestType string
 
+// 请求授权
 type AuthorizeRequest struct {
 	// 请求授权类型
 	Type AuthorizeRequestType
@@ -39,6 +49,7 @@ type AuthorizeRequest struct {
 	HttpRequest *http.Request
 }
 
+// 授权信息
 type Authorize struct {
 	// 客户端
 	Client Client

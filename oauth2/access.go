@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+const (
+	AUTHORIZATION_CODE AccessRequestType = "authorization_code"
+	REFRESH_TOKEN      AccessRequestType = "refresh_token"
+	PASSWORD           AccessRequestType = "password"
+	CLIENT_CREDENTIALS AccessRequestType = "client_credentials"
+	ASSERTION          AccessRequestType = "assertion"
+	IMPLICIT           AccessRequestType = "__implicit"
+)
+
+// 访问信息
 type Access struct {
 	Client    Client
 	Authorize *Authorize
