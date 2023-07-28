@@ -2,8 +2,10 @@ package oauth2
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"errors"
 	"net"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -118,4 +120,38 @@ func AnalysisUrls(baseUrl, redirectUrl string) (retBaseUrl, retRedirectUrl *url.
 	retBaseUrl = (&url.URL{Scheme: base.Scheme, Host: host}).ResolveReference(&url.URL{Path: base.Path})
 	retRedirectUrl = (&url.URL{Scheme: base.Scheme, Host: host}).ResolveReference(&url.URL{Path: redirect.Path, RawQuery: redirect.RawQuery})
 	return retBaseUrl, retRedirectUrl, nil
+}
+
+// 输出JSON
+func OutputJSON(res *Response, resWriter http.ResponseWriter) error {
+	// 添加响应头
+	for i, k := range res.Headers {
+		for _, v := range k {
+			resWriter.Header().Add(i, v)
+		}
+	}
+	// 判断是否重定向
+	if res.Type == REDIRECT {
+		url, err := res.GetRedirectUrl()
+		if err != nil {
+			return err
+		}
+		// 设置302重定向
+		resWriter.Header().Add("Location", url)
+		resWriter.WriteHeader(302)
+	} else {
+		// 设置JSON内容格式
+		if resWriter.Header().Get("Content-Type") == "" {
+			resWriter.Header().Set("Content-Type", "application/json")
+		}
+		// 输出状态码
+		resWriter.WriteHeader(res.StatusCode)
+		// 输出JSON
+		encoder := json.NewEncoder(resWriter)
+		err := encoder.Encode(res.Output)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
