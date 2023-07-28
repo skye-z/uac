@@ -1,8 +1,11 @@
 package oauth2
 
 import (
+	"encoding/base64"
 	"net/http"
 	"time"
+
+	"github.com/pborman/uuid"
 )
 
 const (
@@ -80,4 +83,19 @@ type AccessRequest struct {
 	HttpRequest *http.Request
 	// 代码验证器
 	CodeVerifier string
+}
+
+// 创建访问令牌默认实现
+type AccessTokenGenDefault struct {
+}
+
+func (a *AccessTokenGenDefault) GenerateAccessToken(data *Access, generaterefresh bool) (accesstoken string, refreshtoken string, err error) {
+	token := uuid.NewRandom()
+	accesstoken = base64.RawURLEncoding.EncodeToString([]byte(token))
+
+	if generaterefresh {
+		rtoken := uuid.NewRandom()
+		refreshtoken = base64.RawURLEncoding.EncodeToString([]byte(rtoken))
+	}
+	return
 }

@@ -1,10 +1,13 @@
 package oauth2
 
 import (
+	"encoding/base64"
 	"net/http"
 	"net/url"
 	"regexp"
 	"time"
+
+	"github.com/pborman/uuid"
 )
 
 var (
@@ -262,4 +265,13 @@ func (s *Server) FinishAuthorizeRequest(res *Response, req *http.Request, ar *Au
 	} else {
 		res.SetErrorState(Errors.DeniedAccess.Message, "", ar.State)
 	}
+}
+
+// 创建授权令牌默认实现
+type AuthorizeTokenGenDefault struct {
+}
+
+func (a *AuthorizeTokenGenDefault) GenerateAuthorizeToken(data *Authorize) (ret string, err error) {
+	token := uuid.NewRandom()
+	return base64.RawURLEncoding.EncodeToString([]byte(token)), nil
 }
