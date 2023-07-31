@@ -110,7 +110,7 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 	// 获取重定向地址
 	redirectUri, err := url.QueryUnescape(req.FormValue("redirect_uri"))
 	if err != nil {
-		res.SetErrorState(Errors.InvalidRequest, "")
+		res.OutErrorState(Errors.InvalidRequest, "")
 		res.InternalError = err
 		return nil
 	}
@@ -128,23 +128,23 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 	ret.Client, err = res.Store.GetClient(req.FormValue("client_id"))
 	// 客户端接口未实现
 	if err == Errors.ImplementNotFound.Throw() {
-		res.SetErrorState(Errors.ImplementNotFound, ret.State)
+		res.OutErrorState(Errors.ImplementNotFound, ret.State)
 		return nil
 	}
 	// 客户端获取出错
 	if err != nil {
-		res.SetErrorState(Errors.Unexpected, ret.State)
+		res.OutErrorState(Errors.Unexpected, ret.State)
 		res.InternalError = err
 		return nil
 	}
 	// 未获取到客户端
 	if ret.Client == nil {
-		res.SetErrorState(Errors.UnauthorizedClient, ret.State)
+		res.OutErrorState(Errors.UnauthorizedClient, ret.State)
 		return nil
 	}
 	// 未获取到重定向地址(必须要有)
 	if ret.Client.GetRedirectUri() == "" {
-		res.SetErrorState(Errors.UnauthorizedClient, ret.State)
+		res.OutErrorState(Errors.UnauthorizedClient, ret.State)
 		return nil
 	}
 	// 允许多个重定向地址
@@ -153,7 +153,7 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 	}
 	// 校验重定向地址是否匹配
 	if realRedirectUri, err := ValidateUriList(ret.Client.GetRedirectUri(), ret.RedirectUri, s.Config.AllowMultipleRedirectUri); err != nil {
-		res.SetErrorState(Errors.InvalidRequest, ret.State)
+		res.OutErrorState(Errors.InvalidRequest, ret.State)
 		res.InternalError = err
 		return nil
 	} else {
@@ -174,7 +174,7 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 				// 判断是否要求请求使用PKCE挑战
 				// https://datatracker.ietf.org/doc/html/rfc7636
 				if s.Config.RequirePKCEForPublicClients && CheckClientSecret(ret.Client, "") {
-					res.SetErrorState(Errors.InvalidRequest, ret.State)
+					res.OutErrorState(Errors.InvalidRequest, ret.State)
 					return nil
 				}
 			} else {
@@ -186,12 +186,12 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 				}
 				// 判断挑战方法是否在允许范围
 				if codeChallengeMethod != PKCE_PLAIN && codeChallengeMethod != PKCE_S256 {
-					res.SetErrorState(Errors.InvalidRequest, ret.State)
+					res.OutErrorState(Errors.InvalidRequest, ret.State)
 					return nil
 				}
 				// 判断挑战代码是否包含非法字符
 				if matched := pkceMatcher.MatchString(codeChallenge); !matched {
-					res.SetErrorState(Errors.InvalidRequest, ret.State)
+					res.OutErrorState(Errors.InvalidRequest, ret.State)
 					return nil
 				}
 				ret.CodeChallenge = codeChallenge
@@ -203,7 +203,7 @@ func (s *Server) HandleAuthorizeRequest(res *Response, req *http.Request) *Autho
 		}
 		return ret
 	}
-	res.SetErrorState(Errors.InvalidAuthRequestType, ret.State)
+	res.OutErrorState(Errors.InvalidAuthRequestType, ret.State)
 	return nil
 }
 
@@ -254,14 +254,14 @@ func (s *Server) FinishAuthorizeRequest(res *Response, req *http.Request, ar *Au
 			// 授权令牌,获取授权码
 			code, err := s.AuthorizeTokenGen.GenerateAuthorizeToken(ret)
 			if err != nil {
-				res.SetErrorState(Errors.Unexpected, ar.State)
+				res.OutErrorState(Errors.Unexpected, ar.State)
 				res.InternalError = err
 				return
 			}
 			ret.Code = code
 			// 保存授权码
 			if err = res.Store.SaveAuthorize(ret); err != nil {
-				res.SetErrorState(Errors.Unexpected, ar.State)
+				res.OutErrorState(Errors.Unexpected, ar.State)
 				res.InternalError = err
 				return
 			}
@@ -270,7 +270,7 @@ func (s *Server) FinishAuthorizeRequest(res *Response, req *http.Request, ar *Au
 			res.Output["state"] = ret.State
 		}
 	} else {
-		res.SetErrorState(Errors.DeniedAccess, ar.State)
+		res.OutErrorState(Errors.DeniedAccess, ar.State)
 	}
 }
 
