@@ -51,19 +51,34 @@ type CustomErrors struct {
 	ProhibitFragment CustomError
 	// 意料之外的错误
 	Unexpected CustomError
+	// 创建令牌失败
+	FailedCreateToken CustomError
+	// 存储令牌失败
+	FailedStoreToken CustomError
+	// 访问请求类型无效
+	InvalidAccessRequestType CustomError
+	// 客户端信息无效
+	InvalidClientInfo CustomError
+	// 存储服务故障
+	FailureStore CustomError
 }
 
 var Errors = CustomErrors{
-	ImplementNotFound:      CustomError{10000, "未找到实现"},
-	InvalidRequest:         CustomError{10001, "无效请求"},
-	UnauthorizedClient:     CustomError{10002, "未经授权的客户端"},
-	InvalidAuthHeader:      CustomError{10010, "授权请求头无效"},
-	InvalidAuthMessage:     CustomError{10011, "授权信息无效"},
-	InvalidAuthRequestType: CustomError{10012, "授权请求类型无效"},
-	InvalidRedirectUri:     CustomError{10013, "重定向地址无效"},
-	InvalidUriScheme:       CustomError{10013, "地址方案无效"},
-	InvalidUriHosts:        CustomError{10013, "地址主机无效"},
-	DeniedAccess:           CustomError{10014, "拒绝访问"},
-	ProhibitFragment:       CustomError{10015, "URI中禁止出现次级资源"},
-	Unexpected:             CustomError{99999, "意料之外的错误"},
+	ImplementNotFound:        CustomError{10000, "未找到实现"},
+	InvalidRequest:           CustomError{10001, "无效请求"},
+	UnauthorizedClient:       CustomError{10002, "未经授权的客户端"},
+	InvalidAuthHeader:        CustomError{10010, "授权请求头无效"},
+	InvalidAuthMessage:       CustomError{10011, "授权信息无效"},
+	InvalidAuthRequestType:   CustomError{10012, "访问请求类型无效"},
+	InvalidRedirectUri:       CustomError{10013, "重定向地址无效"},
+	InvalidUriScheme:         CustomError{10013, "地址方案无效"},
+	InvalidUriHosts:          CustomError{10013, "地址主机无效"},
+	DeniedAccess:             CustomError{10014, "拒绝访问"},
+	ProhibitFragment:         CustomError{10015, "URI中禁止出现次级资源"},
+	Unexpected:               CustomError{99999, "意料之外的错误"},
+	FailedCreateToken:        CustomError{10016, "创建令牌失败"},
+	FailedStoreToken:         CustomError{10017, "存储令牌失败"},
+	InvalidAccessRequestType: CustomError{10012, "授权请求类型无效"},
+	InvalidClientInfo:        CustomError{10013, "客户端信息无效"},
+	FailureStore:             CustomError{10013, "存储服务故障"},
 }
