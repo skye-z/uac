@@ -1,3 +1,10 @@
+/*
+错误处理
+
+BetaX Unified Authorization Center
+Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
+*/
+
 package oauth2
 
 import (

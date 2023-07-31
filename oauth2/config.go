@@ -1,3 +1,10 @@
+/*
+服务配置
+
+BetaX Unified Authorization Center
+Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
+*/
+
 package oauth2
 
 // 允许的授权请求类型

@@ -80,12 +80,12 @@ func (s Server) getClientAuth(res *Response, req *http.Request, allowClientSecre
 	// 从请求中获取 Basic 验证信息
 	auth, err := getBasicAuth(req)
 	if err != nil {
-		s.returnError(res, Errors.InvalidRequest.Message, err, "get_client_auth=%s", "check auth error")
+		s.returnError(res, Errors.InvalidRequest, err, "get_client_auth=%s", "check auth error")
 		return nil
 	}
 	if auth == nil {
 		ce := Errors.UnauthorizedClient
-		s.returnError(res, ce.Message, ce.Throw(), "get_client_auth=%s", "client authentication not sent")
+		s.returnError(res, ce, ce.Throw(), "get_client_auth=%s", "client authentication not sent")
 		return nil
 	}
 	return auth
