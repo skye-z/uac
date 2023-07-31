@@ -1,6 +1,6 @@
 # OAuth2 for UAC
 
-欢迎使用UAC的OAuth2模块, 本模块参照[RFC 6739](https://datatracker.ietf.org/doc/html/rfc6749)标准开发
+欢迎使用UAC的OAuth2模块, 本模块参照[RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749)标准开发
 
 ## OAuth2 定义
 

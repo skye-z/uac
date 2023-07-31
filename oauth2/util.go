@@ -145,7 +145,7 @@ func OutputJSON(res *Response, resWriter http.ResponseWriter) error {
 			resWriter.Header().Set("Content-Type", "application/json")
 		}
 		// 输出状态码
-		resWriter.WriteHeader(res.StatusCode)
+		resWriter.WriteHeader(res.HttpCode)
 		// 输出JSON
 		encoder := json.NewEncoder(resWriter)
 		err := encoder.Encode(res.Output)
