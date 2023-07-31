@@ -5,7 +5,7 @@ BetaX Unified Authorization Center
 Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
 */
 
-package oauth2
+package pkg
 
 import (
 	"crypto/sha256"
@@ -14,6 +14,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/skye-z/uac/oauth2"
 )
 
 type Server struct {
@@ -22,12 +24,12 @@ type Server struct {
 	AuthorizeTokenGen AuthorizeTokenGen
 	AccessTokenGen    AccessTokenGen
 	Now               func() time.Time
-	Logger            Logger
+	Logger            oauth2.Logger
 }
 
 // 创建服务器
 func NewServer(config *Config, store Store) *Server {
-	logger := &LoggerConsole{}
+	logger := &oauth2.LoggerConsole{}
 	logger.Printf("Create server")
 	logger.Printf("Loading %s storage", store.GetName())
 	return &Server{
@@ -78,7 +80,7 @@ func (s *Server) FinishAccessRequest(w *Response, r *http.Request, ar *AccessReq
 			// 创建访问令牌
 			ret.AccessToken, ret.RefreshToken, err = s.AccessTokenGen.GenerateAccessToken(ret, ar.GenerateRefresh)
 			if err != nil {
-				s.returnError(w, Errors.FailedCreateToken, err, "finish_access_request=%s", "error generating token")
+				s.returnError(w, oauth2.Errors.FailedCreateToken, err, "finish_access_request=%s", "error generating token")
 				return
 			}
 		} else {
@@ -86,7 +88,7 @@ func (s *Server) FinishAccessRequest(w *Response, r *http.Request, ar *AccessReq
 		}
 		// 存储访问令牌
 		if err = w.Store.SaveAccess(ret); err != nil {
-			s.returnError(w, Errors.FailedStoreToken, err, "finish_access_request=%s", "error saving access token")
+			s.returnError(w, oauth2.Errors.FailedStoreToken, err, "finish_access_request=%s", "error saving access token")
 			return
 		}
 		// 删除授权令牌
@@ -111,7 +113,7 @@ func (s *Server) FinishAccessRequest(w *Response, r *http.Request, ar *AccessReq
 			w.Output["scope"] = ret.Scope
 		}
 	} else {
-		s.returnError(w, Errors.DeniedAccess, nil, "finish_access_request=%s", "authorization failed")
+		s.returnError(w, oauth2.Errors.DeniedAccess, nil, "finish_access_request=%s", "authorization failed")
 	}
 }
 
@@ -120,17 +122,17 @@ func (s *Server) HandleAccessRequest(w *Response, r *http.Request) *AccessReques
 	// 根据设置判断请求类型是否符合要求
 	if r.Method == "GET" {
 		if !s.Config.AllowGetAccessRequest {
-			s.returnError(w, Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "GET request not allowed")
+			s.returnError(w, oauth2.Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "GET request not allowed")
 			return nil
 		}
 	} else if r.Method != "POST" {
-		s.returnError(w, Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "request must be POST")
+		s.returnError(w, oauth2.Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "request must be POST")
 		return nil
 	}
 	// 分析表单
 	err := r.ParseForm()
 	if err != nil {
-		s.returnError(w, Errors.InvalidRequest, err, "access_request=%s", "parsing error")
+		s.returnError(w, oauth2.Errors.InvalidRequest, err, "access_request=%s", "parsing error")
 		return nil
 	}
 	// 获取访问请求类型
@@ -151,7 +153,7 @@ func (s *Server) HandleAccessRequest(w *Response, r *http.Request) *AccessReques
 		}
 	}
 
-	s.returnError(w, Errors.InvalidAccessRequestType, nil, "access_request=%s", "unknown grant type")
+	s.returnError(w, oauth2.Errors.InvalidAccessRequestType, nil, "access_request=%s", "unknown grant type")
 	return nil
 }
 
@@ -174,7 +176,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 	// 检查是否传入代码
 	if ret.Code == "" {
-		s.returnError(w, Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "code is required")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "code is required")
 		return nil
 	}
 	// 判断客户端是否有效
@@ -185,28 +187,28 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	var err error
 	ret.Authorize, err = w.Store.GetAuthorize(ret.Code)
 	if err != nil {
-		s.returnError(w, Errors.InvalidAuthMessage, err, "auth_code_request=%s", "error loading authorize data")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, err, "auth_code_request=%s", "error loading authorize data")
 		return nil
 	}
 	if ret.Authorize == nil {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "auth_code_request=%s", "authorization data is nil")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "auth_code_request=%s", "authorization data is nil")
 		return nil
 	}
 	if ret.Authorize.Client == nil {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "auth_code_request=%s", "authorization client is nil")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "auth_code_request=%s", "authorization client is nil")
 		return nil
 	}
 	if ret.Authorize.Client.GetRedirectUri() == "" {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "auth_code_request=%s", "client redirect uri is empty")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "auth_code_request=%s", "client redirect uri is empty")
 		return nil
 	}
 	if ret.Authorize.IsExpiredAt(s.Now()) {
-		s.returnError(w, Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "authorization data is expired")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "authorization data is expired")
 		return nil
 	}
 	// 授权码来源必须为特定客户端
 	if ret.Authorize.Client.GetId() != ret.Client.GetId() {
-		s.returnError(w, Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "client code does not match")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, nil, "auth_code_request=%s", "client code does not match")
 		return nil
 	}
 	// 检查重定向地址
@@ -219,20 +221,20 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 	// 检验重定向地址
 	if realRedirectUri, err := ValidateUriList(ret.Client.GetRedirectUri(), ret.RedirectUri, s.Config.AllowMultipleRedirectUri); err != nil {
-		s.returnError(w, Errors.InvalidRequest, err, "auth_code_request=%s", "error validating client redirect")
+		s.returnError(w, oauth2.Errors.InvalidRequest, err, "auth_code_request=%s", "error validating client redirect")
 		return nil
 	} else {
 		ret.RedirectUri = realRedirectUri
 	}
 	if ret.Authorize.RedirectUri != ret.RedirectUri {
-		s.returnError(w, Errors.InvalidRequest, errors.New("redirect uri is different"), "auth_code_request=%s", "client redirect does not match authorization data")
+		s.returnError(w, oauth2.Errors.InvalidRequest, errors.New("redirect uri is different"), "auth_code_request=%s", "client redirect does not match authorization data")
 		return nil
 	}
 	// 判断是否需要验证PKCE
 	if len(ret.Authorize.CodeChallenge) > 0 {
 		// 判断挑战代码是否包含非法字符
 		if matched := pkceMatcher.MatchString(ret.CodeVerifier); !matched {
-			s.returnError(w, Errors.InvalidRequest, errors.New("code_verifier has invalid format"),
+			s.returnError(w, oauth2.Errors.InvalidRequest, errors.New("code_verifier has invalid format"),
 				"auth_code_request=%s", "pkce code challenge verifier does not match")
 			return nil
 		}
@@ -245,13 +247,13 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 			hash := sha256.Sum256([]byte(ret.CodeVerifier))
 			codeVerifier = base64.RawURLEncoding.EncodeToString(hash[:])
 		default:
-			s.returnError(w, Errors.InvalidRequest, nil,
+			s.returnError(w, oauth2.Errors.InvalidRequest, nil,
 				"auth_code_request=%s", "pkce transform algorithm not supported (rfc7636)")
 			return nil
 		}
 		// 验证不通过
 		if codeVerifier != ret.Authorize.CodeChallenge {
-			s.returnError(w, Errors.InvalidAuthMessage, errors.New("code_verifier failed comparison with code_challenge"),
+			s.returnError(w, oauth2.Errors.InvalidAuthMessage, errors.New("code_verifier failed comparison with code_challenge"),
 				"auth_code_request=%s", "pkce code verifier does not match challenge")
 			return nil
 		}
@@ -307,7 +309,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	}
 	// 检查是否传入刷新令牌
 	if ret.Code == "" {
-		s.returnError(w, Errors.InvalidAuthMessage, nil, "refresh_token=%s", "refresh_token is required")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, nil, "refresh_token=%s", "refresh_token is required")
 		return nil
 	}
 	// 判断客户端是否有效
@@ -318,24 +320,24 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	var err error
 	ret.Access, err = w.Store.GetRefresh(ret.Code)
 	if err != nil {
-		s.returnError(w, Errors.InvalidAuthMessage, err, "refresh_token=%s", "error loading access data")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, err, "refresh_token=%s", "error loading access data")
 		return nil
 	}
 	if ret.Access == nil {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data is nil")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data is nil")
 		return nil
 	}
 	if ret.Access.Client == nil {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data client is nil")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data client is nil")
 		return nil
 	}
 	if ret.Access.Client.GetRedirectUri() == "" {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data client redirect uri is empty")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "refresh_token=%s", "access data client redirect uri is empty")
 		return nil
 	}
 	// 授权码来源必须为特定客户端
 	if ret.Access.Client.GetId() != ret.Client.GetId() {
-		s.returnError(w, Errors.InvalidClientInfo, errors.New("client id must be the same from previous token"), "refresh_token=%s, current=%v, previous=%v", "client mismatch", ret.Client.GetId(), ret.Access.Client.GetId())
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, errors.New("client id must be the same from previous token"), "refresh_token=%s, current=%v, previous=%v", "client mismatch", ret.Client.GetId(), ret.Access.Client.GetId())
 		return nil
 
 	}
@@ -348,7 +350,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	// 扩展令牌范围
 	if extraTokenScopes(ret.Access.Scope, ret.Scope) {
 		msg := "the requested scope must not include any scope not originally granted by the resource owner"
-		s.returnError(w, Errors.DeniedAccess, errors.New(msg), "refresh_token=%s", msg)
+		s.returnError(w, oauth2.Errors.DeniedAccess, errors.New(msg), "refresh_token=%s", msg)
 		return nil
 	}
 	return ret
@@ -373,7 +375,7 @@ func (s *Server) handlePasswordRequest(w *Response, r *http.Request) *AccessRequ
 	}
 	// 检查是否传入用户名和密码
 	if ret.Username == "" || ret.Password == "" {
-		s.returnError(w, Errors.InvalidRequest, nil, "handle_password=%s", "username and pass required")
+		s.returnError(w, oauth2.Errors.InvalidRequest, nil, "handle_password=%s", "username and pass required")
 		return nil
 	}
 	// 判断客户端是否有效
@@ -436,7 +438,7 @@ func (s *Server) handleAssertionRequest(w *Response, r *http.Request) *AccessReq
 	}
 	// 检查是否传入断言
 	if ret.AssertionType == "" || ret.Assertion == "" {
-		s.returnError(w, Errors.InvalidAuthMessage, nil, "handle_assertion_request=%s", "assertion and assertion_type required")
+		s.returnError(w, oauth2.Errors.InvalidAuthMessage, nil, "handle_assertion_request=%s", "assertion and assertion_type required")
 		return nil
 	}
 	// 判断客户端是否有效
@@ -455,33 +457,33 @@ func (s *Server) handleAssertionRequest(w *Response, r *http.Request) *AccessReq
 // 获取客户端
 func (s Server) getClient(auth *BasicAuth, Store Store, w *Response) Client {
 	client, err := Store.GetClient(auth.Username)
-	if err == Errors.ImplementNotFound.Throw() {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "get_client=%s", "not found")
+	if err == oauth2.Errors.ImplementNotFound.Throw() {
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "get_client=%s", "not found")
 		return nil
 	}
 	if err != nil {
-		s.returnError(w, Errors.FailureStore, err, "get_client=%s", "error finding client")
+		s.returnError(w, oauth2.Errors.FailureStore, err, "get_client=%s", "error finding client")
 		return nil
 	}
 	if client == nil {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "get_client=%s", "client is nil")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "get_client=%s", "client is nil")
 		return nil
 	}
 
 	if !CheckClientSecret(client, auth.Password) {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "get_client=%s, client_id=%v", "client check failed", client.GetId())
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "get_client=%s, client_id=%v", "client check failed", client.GetId())
 		return nil
 	}
 
 	if client.GetRedirectUri() == "" {
-		s.returnError(w, Errors.InvalidClientInfo, nil, "get_client=%s", "client redirect uri is empty")
+		s.returnError(w, oauth2.Errors.InvalidClientInfo, nil, "get_client=%s", "client redirect uri is empty")
 		return nil
 	}
 	return client
 }
 
 // 返回错误信息
-func (s Server) returnError(w *Response, responseError CustomError, internalError error, debugFormat string, debugArgs ...interface{}) {
+func (s Server) returnError(w *Response, responseError oauth2.CustomError, internalError error, debugFormat string, debugArgs ...interface{}) {
 	format := "error=%v, internal_error=%#v " + debugFormat
 
 	w.InternalError = internalError

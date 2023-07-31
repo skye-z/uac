@@ -5,7 +5,7 @@ BetaX Unified Authorization Center
 Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
 */
 
-package oauth2
+package pkg
 
 // 允许的授权请求类型
 type AllowedAuthorizeType []AuthorizeRequestType

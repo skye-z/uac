@@ -5,13 +5,15 @@ BetaX Unified Authorization Center
 Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
 */
 
-package oauth2
+package pkg
 
 import (
 	"encoding/base64"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/skye-z/uac/oauth2"
 )
 
 // 请求头 Basic Auth 验证信息
@@ -36,7 +38,7 @@ func getBasicAuth(req *http.Request) (*BasicAuth, error) {
 	// 分割授权信息前缀
 	param := strings.SplitN(auth, " ", 2)
 	if len(param) != 2 || param[0] != "Basic" {
-		return nil, Errors.InvalidAuthHeader.Throw()
+		return nil, oauth2.Errors.InvalidAuthHeader.Throw()
 	}
 	// 解码授权信息主体
 	code, err := base64.StdEncoding.DecodeString(param[1])
@@ -46,7 +48,7 @@ func getBasicAuth(req *http.Request) (*BasicAuth, error) {
 	// 分割授权客户端与密钥
 	param = strings.SplitN(string(code), ":", 2)
 	if len(param) != 2 {
-		return nil, Errors.InvalidAuthMessage.Throw()
+		return nil, oauth2.Errors.InvalidAuthMessage.Throw()
 	}
 	// 提取客户端标识
 	clientId, err := url.QueryUnescape(param[0])
@@ -80,11 +82,11 @@ func (s Server) getClientAuth(res *Response, req *http.Request, allowClientSecre
 	// 从请求中获取 Basic 验证信息
 	auth, err := getBasicAuth(req)
 	if err != nil {
-		s.returnError(res, Errors.InvalidRequest, err, "get_client_auth=%s", "check auth error")
+		s.returnError(res, oauth2.Errors.InvalidRequest, err, "get_client_auth=%s", "check auth error")
 		return nil
 	}
 	if auth == nil {
-		ce := Errors.UnauthorizedClient
+		ce := oauth2.Errors.UnauthorizedClient
 		s.returnError(res, ce, ce.Throw(), "get_client_auth=%s", "client authentication not sent")
 		return nil
 	}

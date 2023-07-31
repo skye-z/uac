@@ -5,7 +5,7 @@ BetaX Unified Authorization Center
 Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
 */
 
-package oauth2
+package pkg
 
 type Client interface {
 	// 客户端编号
