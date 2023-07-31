@@ -16,12 +16,18 @@ import (
 )
 
 const (
+	// 授权码
 	AUTHORIZATION_CODE AccessRequestType = "authorization_code"
-	REFRESH_TOKEN      AccessRequestType = "refresh_token"
-	PASSWORD           AccessRequestType = "password"
+	// 刷新令牌
+	REFRESH_TOKEN AccessRequestType = "refresh_token"
+	// 密码式
+	PASSWORD AccessRequestType = "password"
+	// 客户端凭证式
 	CLIENT_CREDENTIALS AccessRequestType = "client_credentials"
-	ASSERTION          AccessRequestType = "assertion"
-	IMPLICIT           AccessRequestType = "__implicit"
+	// 断言式
+	ASSERTION AccessRequestType = "assertion"
+	// 隐藏式
+	IMPLICIT AccessRequestType = "__implicit"
 )
 
 // 访问信息
