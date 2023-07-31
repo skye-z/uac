@@ -120,11 +120,11 @@ func (s *Server) HandleAccessRequest(w *Response, r *http.Request) *AccessReques
 	// 根据设置判断请求类型是否符合要求
 	if r.Method == "GET" {
 		if !s.Config.AllowGetAccessRequest {
-			s.returnError(w, Errors.InvalidRequest, errors.New("Request must be POST"), "access_request=%s", "GET request not allowed")
+			s.returnError(w, Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "GET request not allowed")
 			return nil
 		}
 	} else if r.Method != "POST" {
-		s.returnError(w, Errors.InvalidRequest, errors.New("Request must be POST"), "access_request=%s", "request must be POST")
+		s.returnError(w, Errors.InvalidRequest, errors.New("request must be post"), "access_request=%s", "request must be POST")
 		return nil
 	}
 	// 分析表单
@@ -225,7 +225,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 		ret.RedirectUri = realRedirectUri
 	}
 	if ret.Authorize.RedirectUri != ret.RedirectUri {
-		s.returnError(w, Errors.InvalidRequest, errors.New("Redirect uri is different"), "auth_code_request=%s", "client redirect does not match authorization data")
+		s.returnError(w, Errors.InvalidRequest, errors.New("redirect uri is different"), "auth_code_request=%s", "client redirect does not match authorization data")
 		return nil
 	}
 	// 判断是否需要验证PKCE
@@ -335,7 +335,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	}
 	// 授权码来源必须为特定客户端
 	if ret.Access.Client.GetId() != ret.Client.GetId() {
-		s.returnError(w, Errors.InvalidClientInfo, errors.New("Client id must be the same from previous token"), "refresh_token=%s, current=%v, previous=%v", "client mismatch", ret.Client.GetId(), ret.Access.Client.GetId())
+		s.returnError(w, Errors.InvalidClientInfo, errors.New("client id must be the same from previous token"), "refresh_token=%s, current=%v, previous=%v", "client mismatch", ret.Client.GetId(), ret.Access.Client.GetId())
 		return nil
 
 	}

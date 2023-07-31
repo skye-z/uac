@@ -64,7 +64,7 @@ func ValidateUriList(baseUriList string, redirectUri string, allow bool) (realRe
 func ValidateUri(baseUri string, redirectUri string) (realRedirectUri string, err error) {
 	// 传入为空
 	if baseUri == "" || redirectUri == "" {
-		return "", errors.New("urls cannot be blank.")
+		return "", errors.New("urls cannot be blank")
 	}
 	// 分析URL
 	base, redirect, err := AnalysisUrls(baseUri, redirectUri)

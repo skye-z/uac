@@ -107,7 +107,7 @@ func (r *Response) SetRedirectFragment(f bool) {
 // 获取重定向地址
 func (r *Response) GetRedirectUrl() (string, error) {
 	if r.Type != REDIRECT {
-		return "", errors.New("Not a redirect response")
+		return "", errors.New("not a redirect response")
 	}
 
 	u, err := url.Parse(r.URL)
