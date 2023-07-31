@@ -9,14 +9,10 @@ package pkg
 
 import (
 	"crypto/subtle"
-	"encoding/json"
 	"errors"
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/skye-z/uac/oauth2"
 )
 
 // 检查客户端密钥
@@ -59,7 +55,7 @@ func ValidateUriList(baseUriList string, redirectUri string, allow bool) (realRe
 		}
 	}
 
-	return "", oauth2.Errors.InvalidRedirectUri.Throw()
+	return "", Errors.InvalidRedirectUri.Throw()
 }
 
 // 验证URI
@@ -80,7 +76,7 @@ func ValidateUri(baseUri string, redirectUri string) (realRedirectUri string, er
 	// 前缀地址匹配
 	requiredPrefix := strings.TrimRight(base.Path, "/") + "/"
 	if !strings.HasPrefix(redirect.Path, requiredPrefix) {
-		return "", oauth2.Errors.InvalidRedirectUri.Throw()
+		return "", Errors.InvalidRedirectUri.Throw()
 	}
 	return redirect.String(), nil
 }
@@ -97,11 +93,11 @@ func AnalysisUrls(baseUrl, redirectUrl string) (retBaseUrl, retRedirectUrl *url.
 	}
 	// 出现次级资源(http://xxxx/xx#次级资源)
 	if base.Fragment != "" || redirect.Fragment != "" {
-		return nil, nil, oauth2.Errors.ProhibitFragment.Throw()
+		return nil, nil, Errors.ProhibitFragment.Throw()
 	}
 	// 方案不匹配
 	if redirect.Scheme != base.Scheme {
-		return nil, nil, oauth2.Errors.InvalidUriScheme.Throw()
+		return nil, nil, Errors.InvalidUriScheme.Throw()
 	}
 
 	var (
@@ -122,45 +118,11 @@ func AnalysisUrls(baseUrl, redirectUrl string) (retBaseUrl, retRedirectUrl *url.
 	}
 	// 主机不匹配
 	if !redirectMatch {
-		return nil, nil, oauth2.Errors.InvalidUriHosts.Throw()
+		return nil, nil, Errors.InvalidUriHosts.Throw()
 	}
 
 	// 返回解析数据
 	retBaseUrl = (&url.URL{Scheme: base.Scheme, Host: host}).ResolveReference(&url.URL{Path: base.Path})
 	retRedirectUrl = (&url.URL{Scheme: base.Scheme, Host: host}).ResolveReference(&url.URL{Path: redirect.Path, RawQuery: redirect.RawQuery})
 	return retBaseUrl, retRedirectUrl, nil
-}
-
-// 输出JSON
-func OutputJSON(res *Response, resWriter http.ResponseWriter) error {
-	// 添加响应头
-	for i, k := range res.Headers {
-		for _, v := range k {
-			resWriter.Header().Add(i, v)
-		}
-	}
-	// 判断是否重定向
-	if res.Type == REDIRECT {
-		url, err := res.GetRedirectUrl()
-		if err != nil {
-			return err
-		}
-		// 设置302重定向
-		resWriter.Header().Add("Location", url)
-		resWriter.WriteHeader(302)
-	} else {
-		// 设置JSON内容格式
-		if resWriter.Header().Get("Content-Type") == "" {
-			resWriter.Header().Set("Content-Type", "application/json")
-		}
-		// 输出状态码
-		resWriter.WriteHeader(res.HttpCode)
-		// 输出JSON
-		encoder := json.NewEncoder(resWriter)
-		err := encoder.Encode(res.Output)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

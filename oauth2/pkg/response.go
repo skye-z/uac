@@ -12,8 +12,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/skye-z/uac/oauth2"
 )
 
 // 响应数据
@@ -72,17 +70,17 @@ func NewResponse(store Store) *Response {
 }
 
 // 输出错误信息
-func (r *Response) OutError(obj oauth2.CustomError) {
+func (r *Response) OutError(obj CustomError) {
 	r.OutErrorUri(obj, "")
 }
 
 // 输出错误状态
-func (r *Response) OutErrorState(obj oauth2.CustomError, state string) {
+func (r *Response) OutErrorState(obj CustomError, state string) {
 	r.OutErrorUri(obj, state)
 }
 
 // 输出错误URI
-func (r *Response) OutErrorUri(obj oauth2.CustomError, state string) {
+func (r *Response) OutErrorUri(obj CustomError, state string) {
 	r.State = false
 	r.Code = obj.Code
 	r.Message = obj.Message

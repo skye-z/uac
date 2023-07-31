@@ -5,16 +5,18 @@ BetaX Unified Authorization Center
 Copyright © 2023 SkyeZhang <skai-zhang@hotmail.com>
 */
 
-package pkg
+package oauth2
+
+import "github.com/skye-z/uac/oauth2/pkg"
 
 // 允许的授权请求类型
-type AllowedAuthorizeType []AuthorizeRequestType
+type AllowedAuthorizeType []pkg.AuthorizeRequestType
 
 // 允许的访问请求类型
-type AllowedAccessType []AccessRequestType
+type AllowedAccessType []pkg.AccessRequestType
 
 // 判断是否允许传入的授权请求类型
-func (t AllowedAuthorizeType) Allow(rt AuthorizeRequestType) bool {
+func (t AllowedAuthorizeType) Allow(rt pkg.AuthorizeRequestType) bool {
 	for _, k := range t {
 		if k == rt {
 			return true
@@ -24,7 +26,7 @@ func (t AllowedAuthorizeType) Allow(rt AuthorizeRequestType) bool {
 }
 
 // 判断是否允许传入的访问请求类型
-func (t AllowedAccessType) Allow(rt AccessRequestType) bool {
+func (t AllowedAccessType) Allow(rt pkg.AccessRequestType) bool {
 	for _, k := range t {
 		if k == rt {
 			return true
@@ -64,8 +66,8 @@ func NewServerConfig() *Config {
 		AuthorizationExpiration:   180,
 		AccessExpiration:          3600,
 		TokenType:                 "Bearer",
-		AllowedAuthorizeTypes:     AllowedAuthorizeType{CODE},
-		AllowedAccessTypes:        AllowedAccessType{AUTHORIZATION_CODE},
+		AllowedAuthorizeTypes:     AllowedAuthorizeType{pkg.CODE},
+		AllowedAccessTypes:        AllowedAccessType{pkg.AUTHORIZATION_CODE},
 		ErrorStatusCode:           200,
 		AllowClientSecretInParams: false,
 		AllowGetAccessRequest:     false,

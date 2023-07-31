@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 
-	"github.com/skye-z/uac/oauth2"
 	oauth2pkg "github.com/skye-z/uac/oauth2/pkg"
 )
 
@@ -47,7 +46,7 @@ func (s *TestStorage) GetClient(id string) (oauth2pkg.Client, error) {
 	if c, ok := s.clients[id]; ok {
 		return c, nil
 	}
-	return nil, oauth2.Errors.ImplementNotFound.Throw()
+	return nil, oauth2pkg.Errors.ImplementNotFound.Throw()
 }
 
 func (s *TestStorage) SaveClient(id string, client oauth2pkg.Client) error {
@@ -67,7 +66,7 @@ func (s *TestStorage) GetAuthorize(code string) (*oauth2pkg.Authorize, error) {
 	if d, ok := s.authorize[code]; ok {
 		return d, nil
 	}
-	return nil, oauth2.Errors.ImplementNotFound.Throw()
+	return nil, oauth2pkg.Errors.ImplementNotFound.Throw()
 }
 
 func (s *TestStorage) RemoveAuthorize(code string) error {
@@ -90,7 +89,7 @@ func (s *TestStorage) GetAccess(code string) (*oauth2pkg.Access, error) {
 	if d, ok := s.access[code]; ok {
 		return d, nil
 	}
-	return nil, oauth2.Errors.ImplementNotFound.Throw()
+	return nil, oauth2pkg.Errors.ImplementNotFound.Throw()
 }
 
 func (s *TestStorage) RemoveAccess(code string) error {
@@ -104,7 +103,7 @@ func (s *TestStorage) GetRefresh(code string) (*oauth2pkg.Access, error) {
 	if d, ok := s.refresh[code]; ok {
 		return s.GetAccess(d)
 	}
-	return nil, oauth2.Errors.ImplementNotFound.Throw()
+	return nil, oauth2pkg.Errors.ImplementNotFound.Throw()
 }
 
 func (s *TestStorage) RemoveRefresh(code string) error {

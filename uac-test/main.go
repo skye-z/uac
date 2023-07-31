@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	oauth2pkg "github.com/skye-z/uac/oauth2/pkg"
+	"github.com/skye-z/uac/oauth2"
 	"github.com/skye-z/uac/uac-test/model"
 )
 
 func main() {
-	server := oauth2pkg.NewServer(oauth2pkg.NewServerConfig(), model.NewTestStorage())
+	server := oauth2.NewServer(oauth2.NewServerConfig(), model.NewTestStorage())
 
 	http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
 		resp := server.NewResponse()
@@ -21,7 +21,7 @@ func main() {
 			// ar.Authorized = true
 			server.FinishAuthorizeRequest(resp, r, ar)
 		}
-		oauth2pkg.OutputJSON(resp, w)
+		oauth2.OutputJSON(resp, w)
 	})
 
 	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +32,7 @@ func main() {
 			ar.Authorized = true
 			server.FinishAccessRequest(resp, r, ar)
 		}
-		oauth2pkg.OutputJSON(resp, w)
+		oauth2.OutputJSON(resp, w)
 	})
 
 	log.Print("[UAC-Test] Test server started")

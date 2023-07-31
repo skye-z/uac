@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/skye-z/uac/oauth2"
 )
 
 // 请求头 Basic Auth 验证信息
@@ -29,7 +27,7 @@ func getAuthorization(req *http.Request) string {
 
 // 从请求中获取 Basic 验证信息
 // Refer https://datatracker.ietf.org/doc/html/rfc6749#autoid-19
-func getBasicAuth(req *http.Request) (*BasicAuth, error) {
+func GetBasicAuth(req *http.Request) (*BasicAuth, error) {
 	// 获取请求头中的授权信息
 	auth := getAuthorization(req)
 	if auth == "" {
@@ -38,7 +36,7 @@ func getBasicAuth(req *http.Request) (*BasicAuth, error) {
 	// 分割授权信息前缀
 	param := strings.SplitN(auth, " ", 2)
 	if len(param) != 2 || param[0] != "Basic" {
-		return nil, oauth2.Errors.InvalidAuthHeader.Throw()
+		return nil, Errors.InvalidAuthHeader.Throw()
 	}
 	// 解码授权信息主体
 	code, err := base64.StdEncoding.DecodeString(param[1])
@@ -48,7 +46,7 @@ func getBasicAuth(req *http.Request) (*BasicAuth, error) {
 	// 分割授权客户端与密钥
 	param = strings.SplitN(string(code), ":", 2)
 	if len(param) != 2 {
-		return nil, oauth2.Errors.InvalidAuthMessage.Throw()
+		return nil, Errors.InvalidAuthMessage.Throw()
 	}
 	// 提取客户端标识
 	clientId, err := url.QueryUnescape(param[0])
@@ -62,33 +60,4 @@ func getBasicAuth(req *http.Request) (*BasicAuth, error) {
 	}
 	// 返回授权信息
 	return &BasicAuth{Username: clientId, Password: clientSecret}, nil
-}
-
-// 获取客户端授权信息
-func (s Server) getClientAuth(res *Response, req *http.Request, allowClientSecretInParams bool) *BasicAuth {
-	// 允许密钥通过请求体传输
-	if allowClientSecretInParams {
-		// 允许不受密码保护的身份验证
-		if _, hasSecret := req.Form["client_secret"]; hasSecret {
-			auth := &BasicAuth{
-				Username: req.FormValue("client_id"),
-				Password: req.FormValue("client_secret"),
-			}
-			if auth.Username != "" {
-				return auth
-			}
-		}
-	}
-	// 从请求中获取 Basic 验证信息
-	auth, err := getBasicAuth(req)
-	if err != nil {
-		s.returnError(res, oauth2.Errors.InvalidRequest, err, "get_client_auth=%s", "check auth error")
-		return nil
-	}
-	if auth == nil {
-		ce := oauth2.Errors.UnauthorizedClient
-		s.returnError(res, ce, ce.Throw(), "get_client_auth=%s", "client authentication not sent")
-		return nil
-	}
-	return auth
 }
