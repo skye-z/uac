@@ -2,7 +2,7 @@
 
 ## Support list
 
-1. [ ] OAuth2
+1. [x] OAuth2 - Preliminary completion
 2. [ ] OIDC
 3. [ ] FIDO2
 4. [ ] SAML2

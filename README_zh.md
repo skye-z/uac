@@ -2,7 +2,7 @@
 
 ## 支持列表
 
-1. [ ] OAuth2
+1. [x] OAuth2 - 初步完成
 2. [ ] OIDC
 3. [ ] FIDO2
 4. [ ] SAML2
